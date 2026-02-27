@@ -7,9 +7,16 @@ import LiquidEther from './LiquidEther'
 import FlowingMenu from './FlowingMenu'
 import CountUp from './CountUp'
 import Plasma from './Plasma'
+import OfferHoverCard from './OfferHoverCard'
 import mercProfile from '../merc.jpeg'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
+
+const OFFER_PANEL_IMAGES = [
+  'https://framerusercontent.com/images/1edPwLJhGXCUhlh38ixQSMOTFA.png?width=1024&height=1024',
+  'https://framerusercontent.com/images/m7OC7BU1eSVf04CkU0jmNPRkf8.png?width=1024&height=1024',
+  'https://framerusercontent.com/images/iI5MBUQ9ctQdcDHjCLNvD4j4kxc.png?width=1024&height=1024',
+]
 
 // Logo component
 const Logo = () => (
@@ -1830,26 +1837,18 @@ const DataServicePage = ({ onNavigate }) => {
             {processPanels.map((item, index) => (
               <motion.article
                 key={item.title}
-                className="data-service-step data-service-step-simple"
-                tabIndex={0}
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.06 }}
                 viewport={{ once: true, amount: 0.3 }}
               >
-                <div className="data-service-step-simple-top">
-                  <div className="data-service-step-simple-head">
-                    <strong>{`0${index + 1}`}</strong>
-                    <h3>{item.title}</h3>
-                  </div>
-                  <span className="data-service-step-simple-sign" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                  </span>
-                </div>
-                <div className="data-service-step-simple-body">
-                  <p>{item.text}</p>
-                </div>
+                <OfferHoverCard
+                  step={`0${index + 1}`}
+                  title={item.title}
+                  text={item.text}
+                  imageSrc={OFFER_PANEL_IMAGES[index % OFFER_PANEL_IMAGES.length]}
+                  imageAlt={item.title}
+                />
               </motion.article>
             ))}
           </div>
@@ -1870,6 +1869,11 @@ const DataServicePage = ({ onNavigate }) => {
 
 const HorizontalLLMDataPage = ({ onNavigate }) => {
   const heroMode = 'b'
+  const horizontalPanelImages = [
+    'https://framerusercontent.com/images/2GAiSbiawE1R7sXuFDwNLfEovRM.jpg?width=711&height=400',
+    'https://framerusercontent.com/images/AtSZKyVin3X5lENphObnH6Puw.jpg?lossless=1&width=612&height=408',
+    'https://framerusercontent.com/images/prEubFztlVx6VnuokfOrkAs.jpg?width=612&height=353',
+  ]
   const processPanels = [
     {
       title: 'Target',
@@ -1947,26 +1951,18 @@ const HorizontalLLMDataPage = ({ onNavigate }) => {
             {processPanels.map((item, index) => (
               <motion.article
                 key={item.title}
-                className="data-service-step data-service-step-simple"
-                tabIndex={0}
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.06 }}
                 viewport={{ once: true, amount: 0.3 }}
               >
-                <div className="data-service-step-simple-top">
-                  <div className="data-service-step-simple-head">
-                    <strong>{`0${index + 1}`}</strong>
-                    <h3>{item.title}</h3>
-                  </div>
-                  <span className="data-service-step-simple-sign" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                  </span>
-                </div>
-                <div className="data-service-step-simple-body">
-                  <p>{item.text}</p>
-                </div>
+                <OfferHoverCard
+                  step={`0${index + 1}`}
+                  title={item.title}
+                  text={item.text}
+                  imageSrc={horizontalPanelImages[index % horizontalPanelImages.length]}
+                  imageAlt={item.title}
+                />
               </motion.article>
             ))}
           </div>
@@ -1987,6 +1983,11 @@ const HorizontalLLMDataPage = ({ onNavigate }) => {
 
 const VerticalLLMDataPage = ({ onNavigate }) => {
   const heroMode = 'c'
+  const verticalPanelImages = [
+    'https://framerusercontent.com/images/GhKqWw4urSIcFZGZ3kWTXG7c.png?width=1536&height=1024',
+    'https://framerusercontent.com/images/9KyWAYBvYkUbASCckXa16Fgc.jpg?width=4032&height=3024',
+    'https://framerusercontent.com/images/mqqWNbBnY0EOUvSMgGlDain8M.jpg?width=1004&height=591',
+  ]
   const processPanels = [
     {
       title: 'Target',
@@ -2064,26 +2065,18 @@ const VerticalLLMDataPage = ({ onNavigate }) => {
             {processPanels.map((item, index) => (
               <motion.article
                 key={item.title}
-                className="data-service-step data-service-step-simple"
-                tabIndex={0}
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.06 }}
                 viewport={{ once: true, amount: 0.3 }}
               >
-                <div className="data-service-step-simple-top">
-                  <div className="data-service-step-simple-head">
-                    <strong>{`0${index + 1}`}</strong>
-                    <h3>{item.title}</h3>
-                  </div>
-                  <span className="data-service-step-simple-sign" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                  </span>
-                </div>
-                <div className="data-service-step-simple-body">
-                  <p>{item.text}</p>
-                </div>
+                <OfferHoverCard
+                  step={`0${index + 1}`}
+                  title={item.title}
+                  text={item.text}
+                  imageSrc={verticalPanelImages[index % verticalPanelImages.length]}
+                  imageAlt={item.title}
+                />
               </motion.article>
             ))}
           </div>
