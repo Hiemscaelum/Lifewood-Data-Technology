@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { LayerGroup, LayersControl, MapContainer, Marker, TileLayer, Tooltip, ZoomControl, useMap } from 'react-leaflet'
-import { IconBrandLinkedin, IconBrandInstagram, IconBrandFacebook, IconBrandYoutube, IconBrandGoogle, IconBrandApple, IconBrandGithub, IconEye, IconEyeOff, IconLayoutDashboard, IconBook2, IconReport, IconChevronRight, IconLogout, IconMenu2, IconX, IconCamera, IconDeviceFloppy } from '@tabler/icons-react'
+import { IconBrandLinkedin, IconBrandInstagram, IconBrandFacebook, IconBrandYoutube, IconBrandGoogle, IconBrandApple, IconBrandGithub, IconEye, IconEyeOff, IconLayoutDashboard, IconBook2, IconReport, IconChevronRight, IconLogout, IconMenu2, IconX, IconCamera, IconDeviceFloppy, IconSearch, IconBell, IconFilter, IconDotsVertical, IconUsers, IconUserPlus, IconUserCheck, IconUserX, IconUserEdit } from '@tabler/icons-react'
 import L from 'leaflet'
 import LiquidEther from './LiquidEther'
 import FlowingMenu from './FlowingMenu'
@@ -17,6 +17,8 @@ const OFFER_PANEL_IMAGES = [
   'https://framerusercontent.com/images/m7OC7BU1eSVf04CkU0jmNPRkf8.png?width=1024&height=1024',
   'https://framerusercontent.com/images/iI5MBUQ9ctQdcDHjCLNvD4j4kxc.png?width=1024&height=1024',
 ]
+const INTERN_DASHBOARD_PATH = '/dashboard'
+const ADMIN_DASHBOARD_PATH = '/admin-dashboard'
 
 // Logo component
 const Logo = () => (
@@ -325,13 +327,13 @@ const GetStartedPage = ({ authMode = 'signup', onAuthModeChange = () => {}, onNa
     event.preventDefault()
     const normalizedUser = signInIdentifier.trim().toLowerCase()
 
-    if (normalizedUser === 'admin1' && signInPassword === '123456') {
+    if (normalizedUser === 'adminuser' && signInPassword === 'adminuser') {
       setSignInError('')
-      onNavigate('/dashboard')
+      onNavigate(ADMIN_DASHBOARD_PATH)
       return
     }
 
-    setSignInError('Invalid credentials. Use admin1 / 123456.')
+    setSignInError('Invalid credentials. Use adminuser / adminuser.')
   }
 
   return (
@@ -518,14 +520,19 @@ const GetStartedPage = ({ authMode = 'signup', onAuthModeChange = () => {}, onNa
 }
 
 const DashboardPage = ({ onNavigate = () => {} }) => {
+  const DASHBOARD_MOBILE_BREAKPOINT = 640
   const [activePanel, setActivePanel] = useState('dashboard')
   const [activeModuleIndex, setActiveModuleIndex] = useState(4)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.innerWidth > DASHBOARD_MOBILE_BREAKPOINT
+  })
   const [profileForm, setProfileForm] = useState({
     firstName: 'Francis',
     lastName: 'Barluado',
-    email: 'admin1',
+    email: 'adminuser',
     phone: '+69 969 355 2175',
     school: 'University of Cebu',
   })
@@ -593,6 +600,36 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
   ]
 
   const activeModule = courseModules[activeModuleIndex]
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > DASHBOARD_MOBILE_BREAKPOINT) {
+        setIsSidebarOpen(true)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [DASHBOARD_MOBILE_BREAKPOINT])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (window.innerWidth <= DASHBOARD_MOBILE_BREAKPOINT) {
+      document.body.style.overflow = isSidebarOpen ? 'hidden' : ''
+      return () => {
+        document.body.style.overflow = ''
+      }
+    }
+  }, [isSidebarOpen, DASHBOARD_MOBILE_BREAKPOINT])
+
+  const handleSidebarSelect = (panel) => (event) => {
+    event.preventDefault()
+    setActivePanel(panel)
+    if (typeof window !== 'undefined' && window.innerWidth <= DASHBOARD_MOBILE_BREAKPOINT) {
+      setIsSidebarOpen(false)
+    }
+  }
+
   const handleProfileFieldChange = (field, value) => {
     setProfileForm((prev) => ({ ...prev, [field]: value }))
   }
@@ -843,7 +880,7 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
 
   return (
     <main className="dashboard-page">
-      <section className="dashboard-basic-layout">
+      <section className={`dashboard-basic-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
         <aside className="dashboard-basic-sidebar">
           <div className="dashboard-basic-sidebar-head">
             <div className="dashboard-basic-brand">
@@ -853,7 +890,14 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
                 loading="lazy"
               />
             </div>
-            <button type="button" className="dashboard-basic-menu-btn" aria-label="Open sidebar menu">
+            <button
+              type="button"
+              className="dashboard-basic-menu-btn"
+              aria-label={isSidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
+              aria-expanded={isSidebarOpen}
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              onMouseEnter={() => setIsSidebarOpen(true)}
+            >
               <IconMenu2 size={19} />
             </button>
           </div>
@@ -882,10 +926,7 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
             <a
               href="#"
               className={activePanel === 'dashboard' ? 'active' : ''}
-              onClick={(event) => {
-                event.preventDefault()
-                setActivePanel('dashboard')
-              }}
+              onClick={handleSidebarSelect('dashboard')}
             >
               <span>
                 <IconLayoutDashboard size={18} />
@@ -896,10 +937,7 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
             <a
               href="#"
               className={activePanel === 'lessons' ? 'active' : ''}
-              onClick={(event) => {
-                event.preventDefault()
-                setActivePanel('lessons')
-              }}
+              onClick={handleSidebarSelect('lessons')}
             >
               <span>
                 <IconBook2 size={18} />
@@ -910,10 +948,7 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
             <a
               href="#"
               className={activePanel === 'reports' ? 'active' : ''}
-              onClick={(event) => {
-                event.preventDefault()
-                setActivePanel('reports')
-              }}
+              onClick={handleSidebarSelect('reports')}
             >
               <span>
                 <IconReport size={18} />
@@ -928,7 +963,24 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
             Logout
           </button>
         </aside>
+        <button
+          type="button"
+          className={`dashboard-basic-sidebar-overlay ${isSidebarOpen ? 'is-visible' : ''}`}
+          aria-label="Close sidebar menu"
+          onClick={() => setIsSidebarOpen(false)}
+        />
         <section className="dashboard-basic-content">
+          {!isSidebarOpen ? (
+            <button
+              type="button"
+              className="dashboard-basic-mobile-toggle"
+              aria-label="Open sidebar menu"
+              onClick={() => setIsSidebarOpen(true)}
+              onMouseEnter={() => setIsSidebarOpen(true)}
+            >
+              <IconMenu2 size={20} />
+            </button>
+          ) : null}
           {activePanel === 'dashboard' && renderDashboardOverview()}
           {activePanel === 'lessons' && renderLessonsPanel()}
           {activePanel === 'reports' && renderReportsPanel()}
@@ -1072,6 +1124,752 @@ const DashboardPage = ({ onNavigate = () => {} }) => {
           </motion.div>
         ) : null}
       </AnimatePresence>
+    </main>
+  )
+}
+
+const AdminDashboardPage = ({ onNavigate = () => {} }) => {
+  const [isAdminSidebarExpanded, setIsAdminSidebarExpanded] = useState(false)
+  const [isAdminUserMenuOpen, setIsAdminUserMenuOpen] = useState(false)
+  const [isTableSearchOpen, setIsTableSearchOpen] = useState(false)
+  const [isTableFilterOpen, setIsTableFilterOpen] = useState(false)
+  const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false)
+  const [tableSortMode, setTableSortMode] = useState('date')
+  const [tableSearchQuery, setTableSearchQuery] = useState('')
+  const [customTeamMembers, setCustomTeamMembers] = useState([])
+  const [teamMemberForm, setTeamMemberForm] = useState({
+    fullName: '',
+    email: '',
+    contact: '',
+    temporaryPassword: '',
+    accessLevel: 'Employee',
+    status: 'Active',
+  })
+  const adminUserMenuRef = useRef(null)
+  const tableSearchInputRef = useRef(null)
+  const tableFilterRef = useRef(null)
+  const PAGE_SIZE = 5
+  const MANAGE_PAGE_SIZE = 5
+  const [currentPage, setCurrentPage] = useState(1)
+  const [manageCurrentPage, setManageCurrentPage] = useState(1)
+  const [adminActivePanel, setAdminActivePanel] = useState('manage-users')
+  const nameRows = [
+    { last: 'Antopina', first: 'John Wrexel', email: 'jw.antopina@gmail.com' },
+    { last: 'Barluado', first: 'Francis Merc', email: 'fmbarluado25@gmail.com' },
+    { last: 'Cabrillos', first: 'Dane Kiev', email: 'danekiev2003@gmail.com' },
+    { last: 'Cagampang', first: 'Emmanuel Jr.', email: 'orientaleac@gmail.com' },
+    { last: 'Casidsid', first: 'Twinky', email: 'twinkycasidsidx@gmail.com' },
+    { last: 'Castrodes', first: 'Atilla Hadrian', email: 'atillahadrianc@gmail.com' },
+    { last: 'Damayo', first: 'Jholmer', email: 'damayojholmer@gmail.com' },
+    { last: 'Francisco', first: 'Ezzel Jan', email: 'ezzelfrancisco95@gmail.com' },
+    { last: 'Gelborion', first: 'Francis Dave', email: 'gelboriondave@gmail.com' },
+    { last: 'Inocentes', first: 'Jose Danielle', email: 'daniel.inocentes30@gmail.com' },
+    { last: 'Jumao-as', first: 'Andre Daniel', email: 'jumaoasandre2003@gmail.com' },
+    { last: 'Jusga', first: 'Ailyn', email: 'ailynjusga99@gmail.com' },
+    { last: 'Lastimosa', first: 'Julius Jr.', email: 'juliusjrclastimosa@gmail.com' },
+    { last: 'Lico', first: 'Trixie Sandra', email: 'licotrixie@gmail.com' },
+    { last: 'Mahasol', first: 'Jayred Deil', email: 'jayredmahasol@gmail.com' },
+    { last: 'Mandado', first: 'Gerard Luis', email: 'gerardmandado@gmail.com' },
+    { last: 'Mumar', first: 'Justine Mhars', email: 'justinemharsmumar@gmail.com' },
+    { last: 'Prandas', first: 'Jumar', email: 'prandasmarie@gmail.com' },
+    { last: 'Quitco', first: 'Kyle Matthew', email: 'kylequitco3212@gmail.com' },
+    { last: 'Soriano', first: 'Darin Jan', email: 'darinjan13@gmail.com' },
+    { last: 'Sungahid', first: 'Raily', email: 'railysungahid@gmail.com' },
+    { last: 'Tacatani', first: 'Dominic', email: 'dominictacatani123@gmail.com' },
+    { last: 'Tampepe', first: 'Prince Christian', email: 'tadeochristianprince@gmail.com' },
+    { last: 'Tumungha', first: 'Hara Alexa', email: 'haraalexatumungha@gmail.com' },
+    { last: 'Ugdamin', first: 'Willa Mae', email: 'willamaeu@gmail.com' },
+    { last: 'Vargas', first: 'Harvey', email: 'harveycvargas@gmail.com' },
+    { last: 'Vergara', first: 'Aleah June', email: 'azeleah1@gmail.com' },
+    { last: 'Paug', first: 'Mart Francesfil', email: 'pmartfrancesfilromarate@gmail.com' },
+    { last: 'Pegarido', first: 'Sol Andrew', email: 'solandrewlabradapegarido@gmail.com' },
+    { last: 'Villaflor', first: 'Philip Vincent', email: 'philsulvil@gmail.com' },
+    { last: 'Nillama', first: 'Francis Garry', email: 'paengwapokaayo123@gmail.com' },
+  ]
+  const roles = ['Intern', 'Employee', 'Admin', 'Employee']
+  const seededUsers = nameRows.map((entry, index) => {
+    const firstToken = entry.first.split(' ')[0] || ''
+    const day = String((index % 28) + 1).padStart(2, '0')
+    return {
+      initials: `${firstToken.charAt(0)}${entry.last.charAt(0)}`.toUpperCase(),
+      name: `${entry.first} ${entry.last}`.trim(),
+      email: entry.email,
+      role: roles[index % roles.length],
+      status: index % 6 === 0 ? 'inactive' : 'active',
+      joined: `2024-03-${day}`
+    }
+  })
+  const recentUsers = [...customTeamMembers, ...seededUsers]
+  const normalizedSearch = tableSearchQuery.trim().toLowerCase()
+  const hasTableSearchValue = normalizedSearch.length > 0
+  const isTableSearchVisible = isTableSearchOpen || hasTableSearchValue
+  const filteredUsers = recentUsers.filter((user) => {
+    if (!normalizedSearch) return true
+    return (
+      user.name.toLowerCase().includes(normalizedSearch) ||
+      user.email.toLowerCase().includes(normalizedSearch) ||
+      user.role.toLowerCase().includes(normalizedSearch)
+    )
+  })
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (tableSortMode === 'az') {
+      return a.name.localeCompare(b.name)
+    }
+    return new Date(b.joined) - new Date(a.joined)
+  })
+  const totalResults = sortedUsers.length
+  const totalPages = Math.max(1, Math.ceil(totalResults / PAGE_SIZE))
+  const activePage = Math.min(currentPage, totalPages)
+  const startIndex = totalResults === 0 ? 0 : (activePage - 1) * PAGE_SIZE
+  const endIndex = totalResults === 0 ? 0 : Math.min(startIndex + PAGE_SIZE, totalResults)
+  const pagedUsers = sortedUsers.slice(startIndex, endIndex)
+  const visiblePages = Array.from({ length: Math.min(3, totalPages) }, (_, index) => index + 1)
+  const topScores = [98.5, 97.2, 95.8, 94.5, 92.1]
+  const topPerformers = recentUsers.slice(0, 5).map((user, index) => ({
+    ...user,
+    score: topScores[index] ?? 90,
+    tasks: 95 + (4 - index) * 9,
+  }))
+  const manageTotalResults = recentUsers.length
+  const manageTotalPages = Math.max(1, Math.ceil(manageTotalResults / MANAGE_PAGE_SIZE))
+  const manageActivePage = Math.min(manageCurrentPage, manageTotalPages)
+  const manageStartIndex = manageTotalResults === 0 ? 0 : (manageActivePage - 1) * MANAGE_PAGE_SIZE
+  const manageEndIndex = manageTotalResults === 0 ? 0 : Math.min(manageStartIndex + MANAGE_PAGE_SIZE, manageTotalResults)
+  const visibleManagePages = Array.from({ length: Math.min(3, manageTotalPages) }, (_, index) => index + 1)
+
+  const manageMembers = recentUsers.slice(manageStartIndex, manageEndIndex).map((user, index) => {
+    const absoluteIndex = manageStartIndex + index
+    const accessLevels = ['Admin', 'Employee', 'Intern', 'Employee', 'Admin']
+    const activities = ['2 mins ago', '1 hour ago', '2 days ago', '5 mins ago', 'Just now']
+    const onboardDates = ['Oct 12, 2023', 'Nov 05, 2023', 'Jan 15, 2024', 'Feb 20, 2024', 'Mar 01, 2024']
+    return {
+      ...user,
+      access: accessLevels[absoluteIndex % accessLevels.length] || 'Employee',
+      activity: activities[absoluteIndex % activities.length] || 'Recently',
+      onboarding: onboardDates[absoluteIndex % onboardDates.length] || user.joined,
+      verified: absoluteIndex % 5 !== 2,
+    }
+  })
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (adminUserMenuRef.current && !adminUserMenuRef.current.contains(event.target)) {
+        setIsAdminUserMenuOpen(false)
+      }
+      if (tableFilterRef.current && !tableFilterRef.current.contains(event.target)) {
+        setIsTableFilterOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [tableSearchQuery])
+
+  useEffect(() => {
+    if (isTableSearchOpen) {
+      tableSearchInputRef.current?.focus()
+    }
+  }, [isTableSearchOpen])
+
+  const handleTeamMemberField = (field) => (event) => {
+    setTeamMemberForm((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const handleAddTeamMemberSubmit = (event) => {
+    event.preventDefault()
+    const fullName = teamMemberForm.fullName.trim()
+    const email = teamMemberForm.email.trim()
+    if (!fullName || !email) return
+
+    const parts = fullName.split(/\s+/)
+    const first = parts[0] || ''
+    const last = parts[parts.length - 1] || ''
+    const initials = `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || 'TM'
+    const today = new Date()
+    const joined = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+    setCustomTeamMembers((prev) => [
+      {
+        initials,
+        name: fullName,
+        email,
+        role: teamMemberForm.accessLevel,
+        status: teamMemberForm.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+        joined,
+      },
+      ...prev,
+    ])
+    setTeamMemberForm({
+      fullName: '',
+      email: '',
+      contact: '',
+      temporaryPassword: '',
+      accessLevel: 'Employee',
+      status: 'Active',
+    })
+    setIsAddTeamModalOpen(false)
+  }
+
+  return (
+    <main className="dashboard-page admin-dashboard-page">
+      <section className={`admin-dashboard-shell ${isAdminSidebarExpanded ? 'admin-expanded' : 'admin-collapsed'}`}>
+        <aside className={`admin-dashboard-sidebar ${isAdminSidebarExpanded ? 'expanded' : 'collapsed'}`}>
+          <div className="admin-dashboard-brand">
+            <img
+              src="https://framerusercontent.com/images/BZSiFYgRc4wDUAuEybhJbZsIBQY.png?width=1519&height=429"
+              alt="Lifewood"
+              loading="lazy"
+            />
+            <button
+              type="button"
+              className="admin-dashboard-brand-menu"
+              aria-label={isAdminSidebarExpanded ? 'Collapse admin menu' : 'Expand admin menu'}
+              onMouseEnter={() => {
+                if (!isAdminSidebarExpanded) setIsAdminSidebarExpanded(true)
+              }}
+              onClick={() => setIsAdminSidebarExpanded((prev) => !prev)}
+            >
+              <IconMenu2 size={18} />
+            </button>
+          </div>
+          <div className="admin-dashboard-profile">
+            <img src={mercProfile} alt="Francis Merc Barluado" loading="lazy" />
+            <p>FRANCIS MERC BARLUADO</p>
+          </div>
+
+          <nav className="admin-dashboard-nav" aria-label="Admin Dashboard">
+            <button
+              type="button"
+              className={adminActivePanel === 'dashboard' ? 'active' : ''}
+              onClick={() => setAdminActivePanel('dashboard')}
+            >
+              <IconLayoutDashboard size={18} />
+              <span className="admin-dashboard-nav-label">Dashboard</span>
+            </button>
+            <button type="button">
+              <IconReport size={18} />
+              <span className="admin-dashboard-nav-label">Data Analytics</span>
+            </button>
+            <button type="button">
+              <IconBook2 size={18} />
+              <span className="admin-dashboard-nav-label">Evaluation</span>
+            </button>
+            <button
+              type="button"
+              className={adminActivePanel === 'manage-users' ? 'active' : ''}
+              onClick={() => setAdminActivePanel('manage-users')}
+            >
+              <IconUsers size={18} />
+              <span className="admin-dashboard-nav-label">Manage User</span>
+            </button>
+          </nav>
+
+          <button type="button" className="admin-dashboard-logout" onClick={() => onNavigate('/get-started')}>
+            <IconLogout size={18} />
+            <span className="admin-dashboard-nav-label">Logout</span>
+          </button>
+        </aside>
+
+        <section className="admin-dashboard-content">
+          <header className="admin-dashboard-topbar">
+            <h1>{adminActivePanel === 'manage-users' ? 'Users' : 'Dashboard'}</h1>
+            <div className="admin-dashboard-top-right">
+              <button type="button" className="admin-dashboard-icon-btn" aria-label="Notifications">
+                <IconBell size={18} />
+              </button>
+              <div className="admin-dashboard-user-wrap" ref={adminUserMenuRef}>
+                <button
+                  type="button"
+                  className="admin-dashboard-user"
+                  aria-label="Open profile menu"
+                  aria-expanded={isAdminUserMenuOpen}
+                  onClick={() => setIsAdminUserMenuOpen((prev) => !prev)}
+                >
+                  <div>
+                    <strong>Barluado, Francis Merc</strong>
+                    <small>Super Admin</small>
+                  </div>
+                  <img src={mercProfile} alt="Francis Merc Barluado" loading="lazy" />
+                </button>
+                {isAdminUserMenuOpen ? (
+                  <div className="admin-dashboard-user-menu" role="menu" aria-label="Profile menu">
+                    <button type="button" role="menuitem" onClick={() => setIsAdminUserMenuOpen(false)}>
+                      <IconUserEdit size={16} />
+                      Edit Profile
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsAdminUserMenuOpen(false)
+                        onNavigate('/get-started')
+                      }}
+                    >
+                      <IconLogout size={16} />
+                      Logout
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </header>
+
+          {adminActivePanel === 'manage-users' ? (
+            <>
+              <section className="admin-manage-hero">
+                <div>
+                  <h2>User Management</h2>
+                  <p>Configure team roles, permissions and security settings</p>
+                </div>
+                <button type="button" className="admin-manage-add-btn" onClick={() => setIsAddTeamModalOpen(true)}>
+                  <IconUserPlus size={16} />
+                  Add Team Member
+                </button>
+              </section>
+
+              <section className="admin-manage-stats">
+                <article className="admin-dashboard-stat-card admin-manage-stat">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconUserCheck size={18} />
+                    </span>
+                    <b className="positive">+4 this month</b>
+                  </div>
+                  <p>Total Members</p>
+                  <h3>48</h3>
+                </article>
+                <article className="admin-dashboard-stat-card admin-manage-stat">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconUsers size={18} />
+                    </span>
+                    <b className="positive">Live</b>
+                  </div>
+                  <p>Active Now</p>
+                  <h3>12</h3>
+                </article>
+                <article className="admin-dashboard-stat-card admin-manage-stat">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconBell size={18} />
+                    </span>
+                    <b>2 expiring soon</b>
+                  </div>
+                  <p>Pending Invites</p>
+                  <h3>3</h3>
+                </article>
+              </section>
+
+              <section className="admin-dashboard-table-card admin-manage-table-card">
+                <div className="admin-dashboard-table-head admin-manage-table-head">
+                  <div>
+                    <h2>User Accounts</h2>
+                    <p>Latest registrations and updates</p>
+                  </div>
+                  <div className="admin-dashboard-table-tools">
+                    <button type="button" className="admin-dashboard-icon-btn" aria-label="Search users">
+                      <IconSearch size={18} />
+                    </button>
+                    <button type="button" className="admin-dashboard-icon-btn" aria-label="Filter users">
+                      <IconFilter size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="admin-manage-table-grid admin-manage-table-columns">
+                  <span>User Identity</span>
+                  <span>Access Level</span>
+                  <span>Status</span>
+                  <span>Onboarding</span>
+                  <span>Last Activity</span>
+                  <span>Actions</span>
+                </div>
+
+                <div className="admin-dashboard-table-body">
+                  {manageMembers.map((member) => (
+                    <article key={`manage-${member.email}`} className="admin-manage-table-grid admin-manage-user-row">
+                      <div className="admin-dashboard-user-cell">
+                        <span>{member.initials}</span>
+                        <div>
+                          <strong>{member.name}</strong>
+                          <small>{member.email}</small>
+                        </div>
+                      </div>
+                      <p><em>{member.access}</em></p>
+                      <p className={`admin-dashboard-status ${member.status}`}>
+                        <i />
+                        {member.status === 'active' ? 'Active' : 'Inactive'}
+                      </p>
+                      <p>
+                        {member.onboarding}
+                        <small>{member.verified ? 'Verified' : 'Pending'}</small>
+                      </p>
+                      <p>{member.activity}</p>
+                      <button type="button" className="admin-dashboard-row-action" aria-label="More actions">
+                        <IconDotsVertical size={16} />
+                      </button>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="admin-dashboard-pagination">
+                  <p className="admin-dashboard-pagination-summary">
+                    Showing <b>{manageTotalResults === 0 ? 0 : manageStartIndex + 1}</b> to <b>{manageEndIndex}</b> of <b>{manageTotalResults}</b> results
+                  </p>
+                  <div className="admin-dashboard-pagination-controls" aria-label="Manage users pagination">
+                    <button
+                      type="button"
+                      className="admin-dashboard-page-btn arrow"
+                      aria-label="Previous page"
+                      disabled={manageActivePage === 1}
+                      onClick={() => setManageCurrentPage((prev) => Math.max(1, prev - 1))}
+                    >
+                      &#8249;
+                    </button>
+                    {visibleManagePages.map((page) => (
+                      <button
+                        key={`manage-page-${page}`}
+                        type="button"
+                        className={`admin-dashboard-page-btn ${manageActivePage === page ? 'active' : ''}`}
+                        onClick={() => setManageCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    {manageTotalPages > 3 ? <span className="admin-dashboard-page-ellipsis">...</span> : null}
+                    <button
+                      type="button"
+                      className="admin-dashboard-page-btn arrow"
+                      aria-label="Next page"
+                      disabled={manageActivePage === manageTotalPages}
+                      onClick={() => setManageCurrentPage((prev) => Math.min(manageTotalPages, prev + 1))}
+                    >
+                      &#8250;
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <AnimatePresence>
+                {isAddTeamModalOpen ? (
+                  <motion.div
+                    className="admin-add-member-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsAddTeamModalOpen(false)}
+                  >
+                    <motion.section
+                      className="admin-add-member-modal"
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="admin-add-member-head">
+                        <div>
+                          <h3>Add Team Member</h3>
+                          <p>New user registration</p>
+                        </div>
+                        <button type="button" aria-label="Close add team member form" onClick={() => setIsAddTeamModalOpen(false)}>
+                          <IconX size={16} />
+                        </button>
+                      </div>
+
+                      <form className="admin-add-member-form" onSubmit={handleAddTeamMemberSubmit}>
+                        <label className="full">
+                          <span>Full Name</span>
+                          <input
+                            type="text"
+                            placeholder="e.g. John Doe"
+                            value={teamMemberForm.fullName}
+                            onChange={handleTeamMemberField('fullName')}
+                            required
+                          />
+                        </label>
+                        <label>
+                          <span>Email Address</span>
+                          <input
+                            type="email"
+                            placeholder="name@email.com"
+                            value={teamMemberForm.email}
+                            onChange={handleTeamMemberField('email')}
+                            required
+                          />
+                        </label>
+                        <label>
+                          <span>Contact Number</span>
+                          <input
+                            type="text"
+                            placeholder="+63 912 345 6789"
+                            value={teamMemberForm.contact}
+                            onChange={handleTeamMemberField('contact')}
+                          />
+                        </label>
+                        <label className="full">
+                          <span>Temporary Password</span>
+                          <input
+                            type="password"
+                            placeholder="Temporary password"
+                            value={teamMemberForm.temporaryPassword}
+                            onChange={handleTeamMemberField('temporaryPassword')}
+                          />
+                        </label>
+                        <label>
+                          <span>Access Level</span>
+                          <select value={teamMemberForm.accessLevel} onChange={handleTeamMemberField('accessLevel')}>
+                            <option>Employee</option>
+                            <option>Admin</option>
+                            <option>Intern</option>
+                          </select>
+                        </label>
+                        <label>
+                          <span>Initial Status</span>
+                          <select value={teamMemberForm.status} onChange={handleTeamMemberField('status')}>
+                            <option>Active</option>
+                            <option>Inactive</option>
+                          </select>
+                        </label>
+                        <button type="submit" className="admin-add-member-submit">Create Account</button>
+                      </form>
+                    </motion.section>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </>
+          ) : (
+            <>
+              <section className="admin-dashboard-stats">
+                <article className="admin-dashboard-stat-card">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconUsers size={18} />
+                    </span>
+                    <b className="positive">+12%</b>
+                  </div>
+                  <p>Total Users</p>
+                  <h3>12,450</h3>
+                </article>
+
+                <article className="admin-dashboard-stat-card">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconUserPlus size={18} />
+                    </span>
+                    <b className="positive">+5.4%</b>
+                  </div>
+                  <p>New Signups</p>
+                  <h3>1,240</h3>
+                </article>
+
+                <article className="admin-dashboard-stat-card">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconUserCheck size={18} />
+                    </span>
+                    <b className="positive">+8.2%</b>
+                  </div>
+                  <p>Verified Users</p>
+                  <h3>11,842</h3>
+                </article>
+
+                <article className="admin-dashboard-stat-card">
+                  <div className="admin-dashboard-stat-head">
+                    <span className="admin-dashboard-stat-icon">
+                      <IconUserX size={18} />
+                    </span>
+                    <b className="negative">-2.1%</b>
+                  </div>
+                  <p>Inactive Accounts</p>
+                  <h3>156</h3>
+                </article>
+              </section>
+
+              <section className="admin-dashboard-data-grid">
+                <section className="admin-dashboard-table-card">
+                <div className="admin-dashboard-table-head">
+                  <div>
+                    <h2>Recent User Accounts</h2>
+                    <p>Latest registrations and updates</p>
+                  </div>
+                  <div
+                    className="admin-dashboard-table-tools"
+                    onMouseEnter={() => setIsTableSearchOpen(true)}
+                    onMouseLeave={() => {
+                      if (!hasTableSearchValue) setIsTableSearchOpen(false)
+                    }}
+                  >
+                    <label
+                      className={`admin-dashboard-table-search ${isTableSearchVisible ? 'is-open' : ''}`}
+                    >
+                      <IconSearch size={18} />
+                      <input
+                        ref={tableSearchInputRef}
+                        type="text"
+                        placeholder="Search users..."
+                        aria-label="Search users"
+                        value={tableSearchQuery}
+                        onChange={(event) => setTableSearchQuery(event.target.value)}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="admin-dashboard-icon-btn"
+                      aria-label="Search users"
+                      aria-pressed={isTableSearchVisible}
+                      onClick={() => {
+                        if (hasTableSearchValue) return
+                        setIsTableSearchOpen((prev) => !prev)
+                      }}
+                    >
+                      <IconSearch size={18} />
+                    </button>
+                    <div className="admin-dashboard-filter-wrap" ref={tableFilterRef}>
+                      <button
+                        type="button"
+                        className="admin-dashboard-icon-btn"
+                        aria-label="Filter users"
+                        aria-expanded={isTableFilterOpen}
+                        onClick={() => setIsTableFilterOpen((prev) => !prev)}
+                      >
+                        <IconFilter size={18} />
+                      </button>
+                      {isTableFilterOpen ? (
+                        <div className="admin-dashboard-filter-menu" role="menu" aria-label="User filters">
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={tableSortMode === 'date' ? 'active' : ''}
+                            onClick={() => {
+                              setTableSortMode('date')
+                              setIsTableFilterOpen(false)
+                            }}
+                          >
+                            By Date
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={tableSortMode === 'az' ? 'active' : ''}
+                            onClick={() => {
+                              setTableSortMode('az')
+                              setIsTableFilterOpen(false)
+                            }}
+                          >
+                            By A-Z
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-dashboard-table-grid admin-dashboard-table-columns">
+                  <span>User</span>
+                  <span>Role</span>
+                  <span>Status</span>
+                  <span>Joined</span>
+                </div>
+
+                <div className="admin-dashboard-table-body">
+                  {pagedUsers.length > 0 ? (
+                    pagedUsers.map((user) => (
+                      <article key={user.email} className="admin-dashboard-table-grid admin-dashboard-user-row">
+                        <div className="admin-dashboard-user-cell">
+                          <span>{user.initials}</span>
+                          <div>
+                            <strong>{user.name}</strong>
+                            <small>{user.email}</small>
+                          </div>
+                        </div>
+                        <p>{user.role}</p>
+                        <p className={`admin-dashboard-status ${user.status}`}>
+                          <i />
+                          {user.status === 'active' ? 'Active' : 'Inactive'}
+                        </p>
+                        <p>{user.joined}</p>
+                      </article>
+                    ))
+                  ) : (
+                    <div className="admin-dashboard-table-empty">No matching users found.</div>
+                  )}
+                </div>
+
+                <div className="admin-dashboard-pagination">
+                  <p className="admin-dashboard-pagination-summary">
+                    Showing <b>{totalResults === 0 ? 0 : startIndex + 1}</b> to <b>{endIndex}</b> of <b>{totalResults}</b> results
+                  </p>
+                  <div className="admin-dashboard-pagination-controls" aria-label="Pagination">
+                    <button
+                      type="button"
+                      className="admin-dashboard-page-btn arrow"
+                      aria-label="Previous page"
+                      disabled={activePage === 1}
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    >
+                      &#8249;
+                    </button>
+                    {visiblePages.map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        className={`admin-dashboard-page-btn ${activePage === page ? 'active' : ''}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    {totalPages > 3 ? <span className="admin-dashboard-page-ellipsis">...</span> : null}
+                    <button
+                      type="button"
+                      className="admin-dashboard-page-btn arrow"
+                      aria-label="Next page"
+                      disabled={activePage === totalPages}
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    >
+                      &#8250;
+                    </button>
+                  </div>
+                </div>
+                </section>
+
+                <aside className="admin-dashboard-top-performers">
+                  <div className="admin-dashboard-top-performers-head">
+                    <h3>Top Performers</h3>
+                    <small>Weekly Leaderboard</small>
+                  </div>
+                  <div className="admin-dashboard-top-performers-list">
+                    {topPerformers.map((member) => (
+                      <article key={`top-${member.email}`} className="admin-dashboard-top-performer-item">
+                        <div className="admin-dashboard-top-performer-user">
+                          <span>{member.initials}</span>
+                          <div>
+                            <strong>{member.name}</strong>
+                            <small>{member.role}</small>
+                          </div>
+                        </div>
+                        <div className="admin-dashboard-top-performer-score">
+                          <b>{member.score.toFixed(1)}%</b>
+                          <small>{member.tasks} tasks</small>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </aside>
+              </section>
+            </>
+          )}
+
+          <footer className="admin-dashboard-footnote">
+            © 2024 Lifewood AI Data Solutions. All rights reserved. Always switch on never off.
+          </footer>
+        </section>
+      </section>
     </main>
   )
 }
@@ -3352,8 +4150,10 @@ function App() {
     pageContent = <GetStartedPage authMode={authMode} onAuthModeChange={setAuthMode} onNavigate={navigateTo} />
   } else if (currentPath === '/sign-in') {
     pageContent = <GetStartedPage authMode="signin" onAuthModeChange={setAuthMode} onNavigate={navigateTo} />
-  } else if (currentPath === '/dashboard') {
+  } else if (currentPath === INTERN_DASHBOARD_PATH) {
     pageContent = <DashboardPage onNavigate={navigateTo} />
+  } else if (currentPath === ADMIN_DASHBOARD_PATH) {
+    pageContent = <AdminDashboardPage onNavigate={navigateTo} />
   } else {
     pageContent = (
       <>
@@ -3367,7 +4167,7 @@ function App() {
     )
   }
 
-  const isDashboardRoute = currentPath === '/dashboard'
+  const isDashboardRoute = currentPath === INTERN_DASHBOARD_PATH || currentPath === ADMIN_DASHBOARD_PATH
 
   return (
     <div className="app">
